@@ -13,7 +13,8 @@ const AdminDashboard = () => {
   // Form states
   const [projectForm, setProjectForm] = useState({ title: '', description: '', imageUrl: '', projectUrl: '', technologies: '' });
   const [postForm, setPostForm] = useState({ title: '', slug: '', content: '', excerpt: '', coverImage: '', published: false });
-  const [profileForm, setProfileForm] = useState({ headline: '', subHeadline: '', techStack: '' });
+  const [profileForm, setProfileForm] = useState({ headline: '', subHeadline: '', techStack: '', avatarUrl: '' });
+  const [accountForm, setAccountForm] = useState({ currentPassword: '', newPassword: '' });
   const [editingId, setEditingId] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -34,7 +35,8 @@ const AdminDashboard = () => {
         setProfileForm({
           headline: res.data.headline || '',
           subHeadline: res.data.subHeadline || '',
-          techStack: res.data.techStack ? res.data.techStack.join(', ') : ''
+          techStack: res.data.techStack ? res.data.techStack.join(', ') : '',
+          avatarUrl: res.data.avatarUrl || ''
         });
       }
     }
@@ -54,8 +56,10 @@ const AdminDashboard = () => {
       });
       if (formType === 'project') {
         setProjectForm({ ...projectForm, imageUrl: res.data.imageUrl });
-      } else {
+      } else if (formType === 'post') {
         setPostForm({ ...postForm, coverImage: res.data.imageUrl });
+      } else if (formType === 'profile') {
+        setProfileForm({ ...profileForm, avatarUrl: res.data.imageUrl });
       }
     } catch (err) {
       console.error(err);
@@ -112,13 +116,25 @@ const AdminDashboard = () => {
     const data = {
       headline: profileForm.headline,
       subHeadline: profileForm.subHeadline,
-      techStack: profileForm.techStack.split(',').map(t => t.trim()).filter(Boolean)
+      techStack: profileForm.techStack.split(',').map(t => t.trim()).filter(Boolean),
+      avatarUrl: profileForm.avatarUrl
     };
     try {
       await api.put('/profile', data);
       alert('Profile updated successfully!');
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    try {
+      await api.put('/auth/change-password', accountForm);
+      alert('Password updated successfully!');
+      setAccountForm({ currentPassword: '', newPassword: '' });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error updating password');
     }
   };
 
@@ -169,6 +185,12 @@ const AdminDashboard = () => {
           >
             Blog Posts
           </button>
+          <button 
+            className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'account' ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
+            onClick={() => { setActiveTab('account'); setEditingId(null); }}
+          >
+            Account Settings
+          </button>
         </aside>
 
         <main className="flex-grow bg-white dark:bg-apple-graphiteA p-8 rounded-2xl border border-apple-grayBorderSoft dark:border-apple-grayBorderMid shadow-sm">
@@ -187,6 +209,14 @@ const AdminDashboard = () => {
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-apple-grayNeutral">Tech Stack (comma separated)</label>
                   <input type="text" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={profileForm.techStack} onChange={e => setProfileForm({...profileForm, techStack: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-apple-grayNeutral">Profile Avatar</label>
+                  <div className="flex gap-4 items-center">
+                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'profile')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" />
+                    {uploadingImage && <span className="text-sm text-apple-grayNeutral">Uploading...</span>}
+                  </div>
+                  {profileForm.avatarUrl && <img src={profileForm.avatarUrl} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover mt-2" />}
                 </div>
                 <div className="flex gap-4">
                   <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2 rounded-lg font-medium">Save Profile</button>
@@ -266,6 +296,23 @@ const AdminDashboard = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'account' && (
+            <div className="space-y-8">
+              <h2 className="text-2xl font-semibold">Account Settings</h2>
+              <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-apple-grayNeutral">Current Password</label>
+                  <input type="password" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={accountForm.currentPassword} onChange={e => setAccountForm({...accountForm, currentPassword: e.target.value})} />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-apple-grayNeutral">New Password</label>
+                  <input type="password" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={accountForm.newPassword} onChange={e => setAccountForm({...accountForm, newPassword: e.target.value})} />
+                </div>
+                <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2 rounded-lg font-medium">Update Password</button>
+              </form>
             </div>
           )}
         </main>

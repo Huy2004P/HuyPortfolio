@@ -29,7 +29,14 @@ const Home = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-10 animate-fade-in">
-      <div className="space-y-4 max-w-3xl">
+      <div className="space-y-6 max-w-3xl flex flex-col items-center">
+        {profile.avatarUrl && (
+          <img 
+            src={profile.avatarUrl} 
+            alt="Profile" 
+            className="w-32 h-32 rounded-full object-cover border-4 border-apple-grayPale dark:border-apple-graphiteA shadow-xl"
+          />
+        )}
         <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-semibold tracking-tighter text-apple-ink dark:text-apple-white">
           {profile.headline}
         </h1>
