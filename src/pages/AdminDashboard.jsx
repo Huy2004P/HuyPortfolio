@@ -11,7 +11,16 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   // Form states
-  const [projectForm, setProjectForm] = useState({ title: '', description: '', imageUrl: '', projectUrl: '', technologies: '' });
+  const [projectForm, setProjectForm] = useState({
+    title: '',
+    description: '',
+    imageUrl: '',
+    projectType: 'web',
+    projectUrl: '',
+    demoUrl: '',
+    apkUrl: '',
+    technologies: ''
+  });
   const [postForm, setPostForm] = useState({ title: '', slug: '', content: '', excerpt: '', coverImage: '', published: false });
   const [profileForm, setProfileForm] = useState({ headline: '', subHeadline: '', techStack: '', avatarUrl: '' });
   const [accountForm, setAccountForm] = useState({ currentPassword: '', newPassword: '' });
@@ -75,6 +84,8 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
+  const emptyProjectForm = { title: '', description: '', imageUrl: '', projectType: 'web', projectUrl: '', demoUrl: '', apkUrl: '', technologies: '' };
+
   const handleProjectSubmit = async (e) => {
     e.preventDefault();
     const data = {
@@ -87,7 +98,7 @@ const AdminDashboard = () => {
       } else {
         await api.post('/projects', data);
       }
-      setProjectForm({ title: '', description: '', imageUrl: '', projectUrl: '', technologies: '' });
+      setProjectForm(emptyProjectForm);
       setEditingId(null);
       fetchData();
     } catch (err) {
@@ -139,7 +150,13 @@ const AdminDashboard = () => {
   };
 
   const editProject = (p) => {
-    setProjectForm({ ...p, technologies: p.technologies.join(', ') });
+    setProjectForm({
+      ...p,
+      technologies: p.technologies.join(', '),
+      projectType: p.projectType || 'web',
+      demoUrl: p.demoUrl || '',
+      apkUrl: p.apkUrl || '',
+    });
     setEditingId(p._id);
   };
 
@@ -244,16 +261,86 @@ const AdminDashboard = () => {
               <form onSubmit={handleProjectSubmit} className="space-y-4">
                 <input type="text" placeholder="Title" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={projectForm.title} onChange={e => setProjectForm({...projectForm, title: e.target.value})} />
                 <textarea placeholder="Description" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" rows={3} value={projectForm.description} onChange={e => setProjectForm({...projectForm, description: e.target.value})} />
+
+                {/* Project Type */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-apple-grayNeutral">Project Type</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="projectType"
+                        value="web"
+                        checked={projectForm.projectType === 'web'}
+                        onChange={e => setProjectForm({...projectForm, projectType: e.target.value, apkUrl: ''})}
+                        className="accent-apple-blueAction"
+                      />
+                      <span className="text-sm">🌐 Web</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="projectType"
+                        value="mobile"
+                        checked={projectForm.projectType === 'mobile'}
+                        onChange={e => setProjectForm({...projectForm, projectType: e.target.value})}
+                        className="accent-apple-blueAction"
+                      />
+                      <span className="text-sm">📱 Mobile App</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Image upload */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                   <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'project')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent text-sm" />
                   {uploadingImage && <span className="text-sm text-apple-grayNeutral">Uploading...</span>}
                 </div>
                 {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" className="h-20 rounded object-cover" />}
-                <input type="text" placeholder="Project URL" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={projectForm.projectUrl} onChange={e => setProjectForm({...projectForm, projectUrl: e.target.value})} />
+
+                {/* Demo URL — Apetizo for mobile, direct link for web */}
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-apple-grayNeutral">
+                    {projectForm.projectType === 'mobile' ? '🔗 Demo Link (Apetizo / store)' : '🔗 Demo / Live URL'}
+                  </label>
+                  <input
+                    type="url"
+                    placeholder={projectForm.projectType === 'mobile' ? 'https://appetize.io/...' : 'https://your-website.com'}
+                    className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent"
+                    value={projectForm.demoUrl}
+                    onChange={e => setProjectForm({...projectForm, demoUrl: e.target.value})}
+                  />
+                </div>
+
+                {/* APK URL — only for mobile */}
+                {projectForm.projectType === 'mobile' && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-apple-grayNeutral">
+                      📦 APK Download Link
+                      <span className="ml-2 text-xs font-normal text-apple-grayNeutral opacity-70">(GitHub Releases, Google Drive, v.v.)</span>
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/user/repo/releases/download/v1.0/app.apk"
+                      className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent text-sm"
+                      value={projectForm.apkUrl}
+                      onChange={e => setProjectForm({...projectForm, apkUrl: e.target.value})}
+                    />
+                    {projectForm.apkUrl && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        ✅ Link đã nhập: <a href={projectForm.apkUrl} target="_blank" rel="noopener noreferrer" className="underline">Kiểm tra link</a>
+                      </p>
+                    )}
+                    <p className="text-xs text-apple-grayNeutral opacity-60">
+                      💡 Tip: Upload APK lên <strong>GitHub Releases</strong> rồi copy link tải về dán vào đây.
+                    </p>
+                  </div>
+                )}
+
                 <input type="text" placeholder="Technologies (comma separated)" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={projectForm.technologies} onChange={e => setProjectForm({...projectForm, technologies: e.target.value})} />
                 <div className="flex gap-4">
                   <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2 rounded-lg font-medium">{editingId ? 'Update' : 'Create'}</button>
-                  {editingId && <button type="button" onClick={() => { setEditingId(null); setProjectForm({ title: '', description: '', imageUrl: '', projectUrl: '', technologies: '' }); }} className="px-6 py-2 border border-apple-grayBorderMid rounded-lg font-medium">Cancel</button>}
+                  {editingId && <button type="button" onClick={() => { setEditingId(null); setProjectForm(emptyProjectForm); }} className="px-6 py-2 border border-apple-grayBorderMid rounded-lg font-medium">Cancel</button>}
                 </div>
               </form>
 
@@ -261,7 +348,10 @@ const AdminDashboard = () => {
                 <h3 className="text-lg sm:text-xl font-semibold border-t border-apple-grayBorderSoft dark:border-apple-grayBorderMid pt-8">Existing Projects</h3>
                 {projects.map(p => (
                   <div key={p._id} className="flex justify-between items-center p-4 border border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-lg gap-3">
-                    <span className="font-medium text-sm sm:text-base truncate">{p.title}</span>
+                    <div className="flex items-center gap-2 truncate">
+                      <span className="text-xs">{p.projectType === 'mobile' ? '📱' : '🌐'}</span>
+                      <span className="font-medium text-sm sm:text-base truncate">{p.title}</span>
+                    </div>
                     <div className="flex gap-3 shrink-0">
                       <button onClick={() => editProject(p)} className="text-apple-blueAction text-sm">Edit</button>
                       <button onClick={() => deleteItem(p._id, 'projects')} className="text-red-500 text-sm">Delete</button>
