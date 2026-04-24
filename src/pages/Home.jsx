@@ -28,44 +28,44 @@ const Home = () => {
   if (loading) return <div className="text-center py-20 text-apple-grayNeutral">Loading...</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-10 animate-fade-in">
-      <div className="space-y-6 max-w-3xl flex flex-col items-center">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8 sm:space-y-10 animate-fade-in px-2">
+      <div className="space-y-4 sm:space-y-6 max-w-3xl flex flex-col items-center">
         {profile.avatarUrl && (
           <img 
             src={profile.avatarUrl} 
             alt="Profile" 
-            className="w-32 h-32 rounded-full object-cover border-4 border-apple-grayPale dark:border-apple-graphiteA shadow-xl"
+            className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-apple-grayPale dark:border-apple-graphiteA shadow-xl"
           />
         )}
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-semibold tracking-tighter text-apple-ink dark:text-apple-white">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-semibold tracking-tighter text-apple-ink dark:text-apple-white leading-tight">
           {profile.headline}
         </h1>
-        <p className="text-xl sm:text-2xl text-apple-grayNeutral font-light max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl md:text-2xl text-apple-grayNeutral font-light max-w-2xl mx-auto leading-relaxed">
           {profile.subHeadline}
         </p>
       </div>
 
-      <div className="flex space-x-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto px-4 sm:px-0">
         <Link 
           to="/projects" 
-          className="bg-apple-ink dark:bg-apple-white text-apple-white dark:text-apple-ink px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform flex items-center gap-2"
+          className="bg-apple-ink dark:bg-apple-white text-apple-white dark:text-apple-ink px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform flex items-center justify-center gap-2"
         >
           View Projects <ArrowRightIcon className="w-4 h-4" />
         </Link>
         <Link 
           to="/contact" 
-          className="bg-apple-grayPale dark:bg-apple-graphiteA text-apple-ink dark:text-apple-white px-6 py-3 rounded-full font-medium hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB transition-colors"
+          className="bg-apple-grayPale dark:bg-apple-graphiteA text-apple-ink dark:text-apple-white px-6 py-3 rounded-full font-medium hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB transition-colors text-center"
         >
           Contact Me
         </Link>
       </div>
 
       {profile.techStack && profile.techStack.length > 0 && (
-        <div className="mt-20 pt-10 border-t border-apple-grayBorderSoft dark:border-apple-graphiteA w-full max-w-4xl text-left">
-          <h2 className="text-2xl font-display font-semibold mb-6">Tech Stack</h2>
-          <div className="flex flex-wrap gap-3">
+        <div className="mt-10 sm:mt-20 pt-8 sm:pt-10 border-t border-apple-grayBorderSoft dark:border-apple-graphiteA w-full max-w-4xl text-left">
+          <h2 className="text-xl sm:text-2xl font-display font-semibold mb-4 sm:mb-6">Tech Stack</h2>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             {profile.techStack.map(tech => (
-              <span key={tech} className="px-4 py-2 border border-apple-grayBorderSoft dark:border-apple-graphiteB rounded-full text-sm font-medium">
+              <span key={tech} className="px-3 py-1.5 sm:px-4 sm:py-2 border border-apple-grayBorderSoft dark:border-apple-graphiteB rounded-full text-sm font-medium">
                 {tech}
               </span>
             ))}

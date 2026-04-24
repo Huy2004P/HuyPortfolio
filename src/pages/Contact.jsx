@@ -21,7 +21,7 @@ const Contact = () => {
         <p className="text-lg text-apple-grayNeutral">Have a project in mind or just want to say hi? I'd love to hear from you.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-apple-graphiteA p-8 rounded-2xl border border-apple-grayBorderSoft dark:border-apple-grayBorderMid shadow-sm">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-apple-graphiteA p-5 sm:p-8 rounded-2xl border border-apple-grayBorderSoft dark:border-apple-grayBorderMid shadow-sm">
         <div className="space-y-2">
           <label htmlFor="name" className="block text-sm font-medium">Name</label>
           <input

@@ -55,11 +55,11 @@ const AdminDashboard = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (formType === 'project') {
-        setProjectForm({ ...projectForm, imageUrl: res.data.imageUrl });
+        setProjectForm(prev => ({ ...prev, imageUrl: res.data.imageUrl }));
       } else if (formType === 'post') {
-        setPostForm({ ...postForm, coverImage: res.data.imageUrl });
+        setPostForm(prev => ({ ...prev, coverImage: res.data.imageUrl }));
       } else if (formType === 'profile') {
-        setProfileForm({ ...profileForm, avatarUrl: res.data.imageUrl });
+        setProfileForm(prev => ({ ...prev, avatarUrl: res.data.imageUrl }));
       }
     } catch (err) {
       console.error(err);
@@ -155,48 +155,61 @@ const AdminDashboard = () => {
     }
   };
 
+  const tabs = [
+    { key: 'profile', label: 'Profile Info' },
+    { key: 'projects', label: 'Projects' },
+    { key: 'posts', label: 'Blog Posts' },
+    { key: 'account', label: 'Account' },
+  ];
+
   return (
     <div className="min-h-screen bg-apple-grayPale dark:bg-apple-black text-apple-ink dark:text-apple-white font-sans flex flex-col">
-      <nav className="bg-white dark:bg-apple-graphiteA border-b border-apple-grayBorderSoft dark:border-apple-grayBorderMid px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="text-xl font-semibold">Admin Dashboard</h1>
-        <div className="space-x-4">
-          <button onClick={() => navigate('/')} className="text-sm font-medium hover:text-apple-blueAction">View Site</button>
-          <button onClick={handleLogout} className="text-sm font-medium text-red-500 hover:text-red-700">Logout</button>
+      {/* Top nav */}
+      <nav className="bg-white dark:bg-apple-graphiteA border-b border-apple-grayBorderSoft dark:border-apple-grayBorderMid px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0 z-10">
+        <h1 className="text-base sm:text-xl font-semibold">Admin Dashboard</h1>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <button onClick={() => navigate('/')} className="text-xs sm:text-sm font-medium hover:text-apple-blueAction">View Site</button>
+          <button onClick={handleLogout} className="text-xs sm:text-sm font-medium text-red-500 hover:text-red-700">Logout</button>
         </div>
       </nav>
 
-      <div className="flex-grow flex max-w-7xl mx-auto w-full p-6 gap-8">
-        <aside className="w-64 flex flex-col gap-2">
-          <button 
-            className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'profile' ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
-            onClick={() => { setActiveTab('profile'); setEditingId(null); }}
-          >
-            Profile Info
-          </button>
-          <button 
-            className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'projects' ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
-            onClick={() => { setActiveTab('projects'); setEditingId(null); }}
-          >
-            Projects
-          </button>
-          <button 
-            className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'posts' ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
-            onClick={() => { setActiveTab('posts'); setEditingId(null); }}
-          >
-            Blog Posts
-          </button>
-          <button 
-            className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === 'account' ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
-            onClick={() => { setActiveTab('account'); setEditingId(null); }}
-          >
-            Account Settings
-          </button>
+      {/* Mobile tab bar — horizontal scrollable */}
+      <div className="md:hidden bg-white dark:bg-apple-graphiteA border-b border-apple-grayBorderSoft dark:border-apple-grayBorderMid overflow-x-auto">
+        <div className="flex px-4 py-2 gap-1 min-w-max">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => { setActiveTab(tab.key); setEditingId(null); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-apple-blueAction text-white'
+                  : 'text-apple-grayNeutral hover:bg-apple-grayPale dark:hover:bg-apple-graphiteB hover:text-apple-ink dark:hover:text-apple-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-grow flex max-w-7xl mx-auto w-full p-4 sm:p-6 gap-6 sm:gap-8">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:flex w-52 lg:w-64 flex-col gap-2 shrink-0">
+          {tabs.map(tab => (
+            <button
+              key={tab.key}
+              className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${activeTab === tab.key ? 'bg-apple-blueAction text-white' : 'hover:bg-apple-grayBorderSoft dark:hover:bg-apple-graphiteB'}`}
+              onClick={() => { setActiveTab(tab.key); setEditingId(null); }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </aside>
 
-        <main className="flex-grow bg-white dark:bg-apple-graphiteA p-8 rounded-2xl border border-apple-grayBorderSoft dark:border-apple-grayBorderMid shadow-sm">
+        <main className="flex-grow bg-white dark:bg-apple-graphiteA p-5 sm:p-8 rounded-2xl border border-apple-grayBorderSoft dark:border-apple-grayBorderMid shadow-sm min-w-0">
           {activeTab === 'profile' && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold">Edit Homepage Profile</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">Edit Homepage Profile</h2>
               <form onSubmit={handleProfileSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-apple-grayNeutral">Headline</label>
@@ -212,8 +225,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-apple-grayNeutral">Profile Avatar</label>
-                  <div className="flex gap-4 items-center">
-                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'profile')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" />
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'profile')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent text-sm" />
                     {uploadingImage && <span className="text-sm text-apple-grayNeutral">Uploading...</span>}
                   </div>
                   {profileForm.avatarUrl && <img src={profileForm.avatarUrl} alt="Avatar Preview" className="w-24 h-24 rounded-full object-cover mt-2" />}
@@ -227,12 +240,12 @@ const AdminDashboard = () => {
 
           {activeTab === 'projects' && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold">{editingId ? 'Edit Project' : 'New Project'}</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">{editingId ? 'Edit Project' : 'New Project'}</h2>
               <form onSubmit={handleProjectSubmit} className="space-y-4">
                 <input type="text" placeholder="Title" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={projectForm.title} onChange={e => setProjectForm({...projectForm, title: e.target.value})} />
                 <textarea placeholder="Description" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" rows={3} value={projectForm.description} onChange={e => setProjectForm({...projectForm, description: e.target.value})} />
-                <div className="flex gap-4 items-center">
-                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'project')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" />
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'project')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent text-sm" />
                   {uploadingImage && <span className="text-sm text-apple-grayNeutral">Uploading...</span>}
                 </div>
                 {projectForm.imageUrl && <img src={projectForm.imageUrl} alt="Preview" className="h-20 rounded object-cover" />}
@@ -245,11 +258,11 @@ const AdminDashboard = () => {
               </form>
 
               <div className="space-y-4 mt-8">
-                <h3 className="text-xl font-semibold border-t border-apple-grayBorderSoft dark:border-apple-grayBorderMid pt-8">Existing Projects</h3>
+                <h3 className="text-lg sm:text-xl font-semibold border-t border-apple-grayBorderSoft dark:border-apple-grayBorderMid pt-8">Existing Projects</h3>
                 {projects.map(p => (
-                  <div key={p._id} className="flex justify-between items-center p-4 border border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-lg">
-                    <span className="font-medium">{p.title}</span>
-                    <div className="space-x-3">
+                  <div key={p._id} className="flex justify-between items-center p-4 border border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-lg gap-3">
+                    <span className="font-medium text-sm sm:text-base truncate">{p.title}</span>
+                    <div className="flex gap-3 shrink-0">
                       <button onClick={() => editProject(p)} className="text-apple-blueAction text-sm">Edit</button>
                       <button onClick={() => deleteItem(p._id, 'projects')} className="text-red-500 text-sm">Delete</button>
                     </div>
@@ -261,13 +274,13 @@ const AdminDashboard = () => {
 
           {activeTab === 'posts' && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold">{editingId ? 'Edit Post' : 'New Post'}</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">{editingId ? 'Edit Post' : 'New Post'}</h2>
               <form onSubmit={handlePostSubmit} className="space-y-4">
                 <input type="text" placeholder="Title" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={postForm.title} onChange={e => setPostForm({...postForm, title: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-')})} />
                 <input type="text" placeholder="Slug" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" value={postForm.slug} onChange={e => setPostForm({...postForm, slug: e.target.value})} />
                 <textarea placeholder="Excerpt" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" rows={2} value={postForm.excerpt} onChange={e => setPostForm({...postForm, excerpt: e.target.value})} />
-                <div className="flex gap-4 items-center">
-                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'post')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent" />
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'post')} className="w-full px-4 py-2 border border-apple-grayBorderMid rounded bg-transparent text-sm" />
                   {uploadingImage && <span className="text-sm text-apple-grayNeutral">Uploading...</span>}
                 </div>
                 {postForm.coverImage && <img src={postForm.coverImage} alt="Preview" className="h-20 rounded object-cover" />}
@@ -285,11 +298,11 @@ const AdminDashboard = () => {
               </form>
 
               <div className="space-y-4 mt-8">
-                <h3 className="text-xl font-semibold border-t border-apple-grayBorderSoft dark:border-apple-grayBorderMid pt-8">Existing Posts</h3>
+                <h3 className="text-lg sm:text-xl font-semibold border-t border-apple-grayBorderSoft dark:border-apple-grayBorderMid pt-8">Existing Posts</h3>
                 {posts.map(p => (
-                  <div key={p._id} className="flex justify-between items-center p-4 border border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-lg">
-                    <span className="font-medium">{p.title} <span className="text-xs text-apple-grayNeutral ml-2">({p.published ? 'Published' : 'Draft'})</span></span>
-                    <div className="space-x-3">
+                  <div key={p._id} className="flex justify-between items-center p-4 border border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-lg gap-3">
+                    <span className="font-medium text-sm sm:text-base truncate">{p.title} <span className="text-xs text-apple-grayNeutral ml-1">({p.published ? 'Published' : 'Draft'})</span></span>
+                    <div className="flex gap-3 shrink-0">
                       <button onClick={() => editPost(p)} className="text-apple-blueAction text-sm">Edit</button>
                       <button onClick={() => deleteItem(p._id, 'posts')} className="text-red-500 text-sm">Delete</button>
                     </div>
@@ -301,7 +314,7 @@ const AdminDashboard = () => {
 
           {activeTab === 'account' && (
             <div className="space-y-8">
-              <h2 className="text-2xl font-semibold">Account Settings</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">Account Settings</h2>
               <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-apple-grayNeutral">Current Password</label>
