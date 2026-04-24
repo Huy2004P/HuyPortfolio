@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-apple-grayPale text-apple-ink dark:bg-apple-black dark:text-apple-white antialiased transition-colors duration-300;
+  }
+}
+
+.quill {
+  @apply bg-white dark:bg-apple-graphiteA text-apple-ink dark:text-apple-white rounded-md;
+}
+
+.ql-toolbar {
+  @apply bg-apple-grayPale dark:bg-apple-graphiteB border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-t-md;
+}
+
+.ql-container {
+  @apply border-apple-grayBorderSoft dark:border-apple-grayBorderMid rounded-b-md;
+}
