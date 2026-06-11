@@ -2,9 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Projects from './pages/Projects';
+import MobilePortfolio from './pages/MobilePortfolio';
+import GamePortfolio from './pages/GamePortfolio';
 import Blog from './pages/Blog';
 import PostDetail from './pages/PostDetail';
 import Contact from './pages/Contact';
+import Donation from './pages/Donation';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { useState, useEffect } from 'react';
@@ -39,9 +44,14 @@ function App() {
         <Route path="/" element={<Layout darkMode={darkMode} toggleDarkMode={toggleDarkMode} />}>
           <Route index element={<Home />} />
           <Route path="projects" element={<Projects />} />
+          <Route path="mobile" element={<MobilePortfolio />} />
+          <Route path="game" element={<GamePortfolio />} />
           <Route path="blog" element={<Blog />} />
           <Route path="blog/:slug" element={<PostDetail />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="donation" element={<Donation />} />
+          <Route path="privacy" element={<Privacy />} />
+          <Route path="terms" element={<Terms />} />
         </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={
