@@ -65,6 +65,26 @@ const AdminDashboard = () => {
   const [editingDictKey, setEditingDictKey] = useState(null);
   const [dictForm, setDictForm] = useState({ vi: '', en: '', ja: '', ko: '', zh: '' });
 
+  // Static Pages state
+  const [selectedStaticPage, setSelectedStaticPage] = useState('privacy');
+  const [pagesForm, setPagesForm] = useState({
+    privacy_title_vi: '', privacy_title_en: '', privacy_title_ja: '', privacy_title_ko: '', privacy_title_zh: '',
+    privacy_content_vi: '', privacy_content_en: '', privacy_content_ja: '', privacy_content_ko: '', privacy_content_zh: '',
+    terms_title_vi: '', terms_title_en: '', terms_title_ja: '', terms_title_ko: '', terms_title_zh: '',
+    terms_content_vi: '', terms_content_en: '', terms_content_ja: '', terms_content_ko: '', terms_content_zh: '',
+    donation_title_vi: '', donation_title_en: '', donation_title_ja: '', donation_title_ko: '', donation_title_zh: '',
+    donation_content_vi: '', donation_content_en: '', donation_content_ja: '', donation_content_ko: '', donation_content_zh: '',
+    donation_bank_name_vi: '', donation_bank_name_en: '', donation_bank_name_ja: '', donation_bank_name_ko: '', donation_bank_name_zh: '',
+    donation_account_number: '',
+    donation_account_name: '',
+    donation_branch_vi: '', donation_branch_en: '', donation_branch_ja: '', donation_branch_ko: '', donation_branch_zh: '',
+    donation_qr_code_url: '',
+    donation_momo_name: '', donation_momo_phone: '',
+    donation_zalopay_name: '', donation_zalopay_phone: '',
+    donation_buymeacoffee_url: '',
+    donation_kofi_url: ''
+  });
+
   const [accountForm, setAccountForm] = useState({ currentPassword: '', newPassword: '' });
   const [editingId, setEditingId] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -129,9 +149,94 @@ const AdminDashboard = () => {
       } else if (activeTab === 'dictionary') {
         const res = await api.get('/dictionary');
         setDictEntries(Array.isArray(res.data) ? res.data : []);
+      } else if (activeTab === 'pages') {
+        const res = await api.get('/dictionary');
+        const items = Array.isArray(res.data) ? res.data : [];
+        setDictEntries(items);
+
+        const newForm = {
+          privacy_title_vi: '', privacy_title_en: '', privacy_title_ja: '', privacy_title_ko: '', privacy_title_zh: '',
+          privacy_content_vi: '', privacy_content_en: '', privacy_content_ja: '', privacy_content_ko: '', privacy_content_zh: '',
+          terms_title_vi: '', terms_title_en: '', terms_title_ja: '', terms_title_ko: '', terms_title_zh: '',
+          terms_content_vi: '', terms_content_en: '', terms_content_ja: '', terms_content_ko: '', terms_content_zh: '',
+          donation_title_vi: '', donation_title_en: '', donation_title_ja: '', donation_title_ko: '', donation_title_zh: '',
+          donation_content_vi: '', donation_content_en: '', donation_content_ja: '', donation_content_ko: '', donation_content_zh: '',
+          donation_bank_name_vi: '', donation_bank_name_en: '', donation_bank_name_ja: '', donation_bank_name_ko: '', donation_bank_name_zh: '',
+          donation_account_number: '',
+          donation_account_name: '',
+          donation_branch_vi: '', donation_branch_en: '', donation_branch_ja: '', donation_branch_ko: '', donation_branch_zh: '',
+          donation_qr_code_url: '',
+          donation_momo_name: '', donation_momo_phone: '',
+          donation_zalopay_name: '', donation_zalopay_phone: '',
+          donation_buymeacoffee_url: '',
+          donation_kofi_url: ''
+        };
+
+        const keys = [
+          'privacy_title', 'privacy_content',
+          'terms_title', 'terms_content',
+          'donation_title', 'donation_content',
+          'donation_bank_name', 'donation_account_number', 'donation_account_name',
+          'donation_branch', 'donation_qr_code_url',
+          'donation_momo_name', 'donation_momo_phone',
+          'donation_zalopay_name', 'donation_zalopay_phone',
+          'donation_buymeacoffee_url', 'donation_kofi_url'
+        ];
+
+        keys.forEach(k => {
+          const entry = items.find(item => item.key === k);
+          const trans = entry?.translations || {};
+          ['vi', 'en', 'ja', 'ko', 'zh'].forEach(l => {
+            const val = trans[l] || '';
+            if (['donation_account_number', 'donation_account_name', 'donation_qr_code_url', 'donation_momo_phone', 'donation_zalopay_phone', 'donation_buymeacoffee_url', 'donation_kofi_url'].includes(k)) {
+              newForm[k] = trans['vi'] || trans['en'] || val;
+            } else {
+              newForm[`${k}_${l}`] = val;
+            }
+          });
+        });
+        setPagesForm(newForm);
       }
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
+    }
+  };
+
+  const handlePagesSubmit = async (e) => {
+    e.preventDefault();
+    let keysToUpdate = [];
+    if (selectedStaticPage === 'privacy') {
+      keysToUpdate = ['privacy_title', 'privacy_content'];
+    } else if (selectedStaticPage === 'terms') {
+      keysToUpdate = ['terms_title', 'terms_content'];
+    } else if (selectedStaticPage === 'donation') {
+      keysToUpdate = [
+        'donation_title', 'donation_content',
+        'donation_bank_name', 'donation_account_number', 'donation_account_name',
+        'donation_branch', 'donation_qr_code_url',
+        'donation_momo_name', 'donation_momo_phone',
+        'donation_zalopay_name', 'donation_zalopay_phone',
+        'donation_buymeacoffee_url', 'donation_kofi_url'
+      ];
+    }
+
+    try {
+      for (const k of keysToUpdate) {
+        const translations = {};
+        ['vi', 'en', 'ja', 'ko', 'zh'].forEach(l => {
+          if (['donation_account_number', 'donation_account_name', 'donation_qr_code_url', 'donation_momo_phone', 'donation_zalopay_phone', 'donation_buymeacoffee_url', 'donation_kofi_url'].includes(k)) {
+            translations[l] = pagesForm[k];
+          } else {
+            translations[l] = pagesForm[`${k}_${l}`];
+          }
+        });
+        await api.put(`/dictionary/${k}`, { key: k, translations });
+      }
+      alert('Page settings saved and auto-translated successfully!');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save page settings.');
     }
   };
 
@@ -398,26 +503,26 @@ const AdminDashboard = () => {
     try {
       await api.put(`/comments/${id}/status`, { status: 'approved' });
       fetchData();
-    } catch {}
+    } catch { }
   };
   const deleteComment = async (id) => {
     if (!window.confirm('Delete this comment?')) return;
-    try { await api.delete(`/comments/${id}`); fetchData(); } catch {}
+    try { await api.delete(`/comments/${id}`); fetchData(); } catch { }
   };
 
   // ─── Contact ────────────────────────────────────────────────────────────────
   const markRead = async (id) => {
-    try { await api.put(`/contact/${id}/read`); fetchData(); } catch {}
+    try { await api.put(`/contact/${id}/read`); fetchData(); } catch { }
   };
   const deleteMessage = async (id) => {
     if (!window.confirm('Delete this message?')) return;
-    try { await api.delete(`/contact/${id}`); fetchData(); } catch {}
+    try { await api.delete(`/contact/${id}`); fetchData(); } catch { }
   };
 
   // ─── Subscribers ────────────────────────────────────────────────────────────
   const deleteSubscriber = async (id) => {
     if (!window.confirm('Remove this subscriber?')) return;
-    try { await api.delete(`/subscriber/${id}`); fetchData(); } catch {}
+    try { await api.delete(`/subscriber/${id}`); fetchData(); } catch { }
   };
 
   // ─── Dictionary ─────────────────────────────────────────────────────────────
@@ -461,6 +566,7 @@ const AdminDashboard = () => {
   const tabs = [
     { key: 'stats', label: '📊 Dashboard' },
     { key: 'profile', label: '👤 Profiles' },
+    { key: 'pages', label: '📄 Pages' },
     { key: 'projects', label: '📁 Projects' },
     { key: 'posts', label: '✍️ Blog Posts' },
     { key: 'comments', label: '💬 Comments' },
@@ -510,9 +616,8 @@ const AdminDashboard = () => {
           {tabs.map(tab => (
             <button key={tab.key}
               onClick={() => { setActiveTab(tab.key); setEditingId(null); }}
-              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.key ? 'bg-apple-blueAction text-white' : 'text-apple-grayNeutral hover:bg-apple-grayPale dark:hover:bg-apple-graphiteB'
-              }`}
+              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${activeTab === tab.key ? 'bg-apple-blueAction text-white' : 'text-apple-grayNeutral hover:bg-apple-grayPale dark:hover:bg-apple-graphiteB'
+                }`}
             >
               {tab.label}
             </button>
@@ -725,6 +830,160 @@ const AdminDashboard = () => {
                 </div>
 
                 <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2 rounded-lg font-medium mt-4">Save Profile</button>
+              </form>
+            </div>
+          )}
+
+          {/* ═══════ PAGES TAB ═══════ */}
+          {activeTab === 'pages' && (
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-apple-grayBorderSoft dark:border-apple-graphiteB pb-4 gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold font-display">Edit Static Pages</h2>
+                <div className="flex gap-2">
+                  {['privacy', 'terms', 'donation'].map(p => (
+                    <button key={p} type="button" onClick={() => setSelectedStaticPage(p)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedStaticPage === p ? 'bg-purple-600 text-white shadow-md' : 'bg-white/60 dark:bg-white/[0.03] border border-apple-grayBorderSoft dark:border-white/5 text-apple-grayNeutral'}`}
+                    >
+                      {p === 'privacy' && '🔒 Privacy Policy'}
+                      {p === 'terms' && '📝 Terms of Service'}
+                      {p === 'donation' && '💝 Donation & Support'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <form onSubmit={handlePagesSubmit} className="space-y-6">
+                {(selectedStaticPage === 'privacy' || selectedStaticPage === 'terms') && (
+                  <div className="space-y-4">
+                    <LangTabs />
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-apple-grayNeutral">Page Title ({formLang.toUpperCase()})</label>
+                      <input type="text" required className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent"
+                        value={pagesForm[`${selectedStaticPage}_title_${formLang}`] || ''}
+                        onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_title_${formLang}`]: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-apple-grayNeutral">Page Content (Markdown) ({formLang.toUpperCase()})</label>
+                      <textarea required className="w-full px-4 py-3 border border-apple-grayBorderMid rounded-2xl bg-transparent font-mono text-sm" rows={12}
+                        value={pagesForm[`${selectedStaticPage}_content_${formLang}`] || ''}
+                        onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_content_${formLang}`]: e.target.value })} />
+                    </div>
+                  </div>
+                )}
+
+                {selectedStaticPage === 'donation' && (
+                  <div className="space-y-6">
+                    <div className="border border-purple-500/20 rounded-2xl p-5 bg-purple-500/5 space-y-4">
+                      <h3 className="text-sm font-bold text-purple-600 dark:text-purple-400">💝 Donation Title & Message</h3>
+                      <LangTabs />
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Section Title ({formLang.toUpperCase()})</label>
+                        <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                          value={pagesForm[`donation_title_${formLang}`] || ''}
+                          onChange={e => setPagesForm({ ...pagesForm, [`donation_title_${formLang}`]: e.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Support Paragraph (Markdown) ({formLang.toUpperCase()})</label>
+                        <textarea required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm" rows={4}
+                          value={pagesForm[`donation_content_${formLang}`] || ''}
+                          onChange={e => setPagesForm({ ...pagesForm, [`donation_content_${formLang}`]: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Bank Details */}
+                      <div className="border border-indigo-500/20 rounded-2xl p-5 bg-indigo-500/5 space-y-4">
+                        <h3 className="text-sm font-bold text-indigo-600 dark:text-indigo-400">🏦 Bank Transfer Details</h3>
+                        <LangTabs />
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Bank Name ({formLang.toUpperCase()})</label>
+                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                            value={pagesForm[`donation_bank_name_${formLang}`] || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, [`donation_bank_name_${formLang}`]: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Account Number (Same for all languages)</label>
+                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                            value={pagesForm.donation_account_number || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, donation_account_number: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Account Holder Name (Same for all languages)</label>
+                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                            value={pagesForm.donation_account_name || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, donation_account_name: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Branch Location ({formLang.toUpperCase()})</label>
+                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                            value={pagesForm[`donation_branch_${formLang}`] || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, [`donation_branch_${formLang}`]: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">QR Code Image URL (Same for all languages)</label>
+                          <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                            value={pagesForm.donation_qr_code_url || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, donation_qr_code_url: e.target.value })} />
+                        </div>
+                      </div>
+
+                      {/* E-Wallets & Platforms */}
+                      <div className="space-y-6">
+                        <div className="border border-pink-500/20 rounded-2xl p-5 bg-pink-500/5 space-y-4">
+                          <h3 className="text-sm font-bold text-pink-600 dark:text-pink-400">📱 Mobile E-Wallets</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="block text-xs text-apple-grayNeutral">MoMo Name</label>
+                              <input type="text" placeholder="Ví MoMo" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                value={pagesForm.donation_momo_name || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_momo_name: e.target.value })} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-xs text-apple-grayNeutral">MoMo Phone</label>
+                              <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                value={pagesForm.donation_momo_phone || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_momo_phone: e.target.value })} />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="block text-xs text-apple-grayNeutral">ZaloPay Name</label>
+                              <input type="text" placeholder="Ví ZaloPay" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                value={pagesForm.donation_zalopay_name || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_name: e.target.value })} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-xs text-apple-grayNeutral">ZaloPay Phone</label>
+                              <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                value={pagesForm.donation_zalopay_phone || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_phone: e.target.value })} />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border border-amber-500/20 rounded-2xl p-5 bg-amber-500/5 space-y-4">
+                          <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400">☕ External Platforms</h3>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Buy Me A Coffee Link</label>
+                            <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm.donation_buymeacoffee_url || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, donation_buymeacoffee_url: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Ko-fi Link</label>
+                            <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm.donation_kofi_url || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, donation_kofi_url: e.target.value })} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2.5 rounded-xl font-medium mt-4 hover:scale-[1.01] transition-transform">
+                  Save Page Settings
+                </button>
               </form>
             </div>
           )}
