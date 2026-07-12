@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { SunIcon, MoonIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,7 +10,27 @@ const Layout = ({ darkMode, toggleDarkMode }) => {
   const [langOpen, setLangOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterMsg, setNewsletterMsg] = useState('');
-  const { lang, setLang, t, LANG_OPTIONS } = useLanguage();
+  const { lang, setLang, t, tText, LANG_OPTIONS } = useLanguage();
+  const [customPages, setCustomPages] = useState([]);
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const res = await api.get('/pages');
+        setCustomPages(res.data || []);
+      } catch (err) {
+        console.error('Failed to load custom pages for layout', err);
+      }
+    };
+    fetchPages();
+  }, [location.pathname]);
+
+  const headerCustomLinks = customPages
+    .filter(page => page.metadata?.isCustom && page.metadata?.showInHeader)
+    .map(page => ({
+      name: tText(page.navTitle) || tText(page.title),
+      path: `/page/${page.key}`
+    }));
 
   const navLinks = [
     { name: t('nav_home', 'Home'), path: '/' },
@@ -19,6 +39,7 @@ const Layout = ({ darkMode, toggleDarkMode }) => {
     { name: t('nav_projects', 'Projects'), path: '/projects' },
     { name: t('nav_blog', 'Blog'), path: '/blog' },
     { name: t('nav_contact', 'Contact'), path: '/contact' },
+    ...headerCustomLinks
   ];
 
   const handleLinkClick = () => setMobileMenuOpen(false);
@@ -192,7 +213,10 @@ const Layout = ({ darkMode, toggleDarkMode }) => {
       </nav>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
+      <main className={location.pathname === '/page/graduation'
+        ? "flex-grow w-full py-0 relative z-10"
+        : "flex-grow max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10"
+      }>
         <Outlet />
       </main>
 
@@ -223,10 +247,22 @@ const Layout = ({ darkMode, toggleDarkMode }) => {
           </div>
 
           {/* Links */}
-          <div className="flex justify-center space-x-6 text-xs sm:text-sm">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs sm:text-sm">
             <Link to="/privacy" className="hover:text-apple-ink dark:hover:text-apple-white transition-colors">{t('nav_privacy', 'Privacy Policy')}</Link>
             <Link to="/terms" className="hover:text-apple-ink dark:hover:text-apple-white transition-colors">{t('nav_terms', 'Terms of Service')}</Link>
             <Link to="/donation" className="hover:text-apple-ink dark:hover:text-apple-white transition-colors text-purple-600 dark:text-purple-400 font-semibold">{t('nav_donation', 'Donate & Support')}</Link>
+            
+            {customPages
+              .filter(page => page.metadata?.isCustom && page.metadata?.showInFooter)
+              .map(page => (
+                <Link
+                  key={page.key}
+                  to={`/page/${page.key}`}
+                  className="hover:text-apple-ink dark:hover:text-apple-white transition-colors"
+                >
+                  {tText(page.navTitle) || tText(page.title)}
+                </Link>
+              ))}
           </div>
           <p className="opacity-70">&copy; {new Date().getFullYear()} {t('footer_rights', 'Huy Portfolio. Crafted with React & Tailwind.')}</p>
         </div>

@@ -10,6 +10,7 @@ import Contact from './pages/Contact';
 import Donation from './pages/Donation';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import CustomStaticPage from './pages/CustomStaticPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { useState, useEffect } from 'react';
@@ -52,6 +53,7 @@ function App() {
           <Route path="donation" element={<Donation />} />
           <Route path="privacy" element={<Privacy />} />
           <Route path="terms" element={<Terms />} />
+          <Route path="page/:key" element={<CustomStaticPage />} />
         </Route>
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={

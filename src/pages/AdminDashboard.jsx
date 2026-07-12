@@ -66,7 +66,7 @@ const AdminDashboard = () => {
   const [dictForm, setDictForm] = useState({ vi: '', en: '', ja: '', ko: '', zh: '' });
 
   // Static Pages state
-  const [selectedStaticPage, setSelectedStaticPage] = useState('privacy');
+  const [selectedStaticPage, setSelectedStaticPage] = useState('list');
   const [pagesForm, setPagesForm] = useState({
     privacy_title_vi: '', privacy_title_en: '', privacy_title_ja: '', privacy_title_ko: '', privacy_title_zh: '',
     privacy_content_vi: '', privacy_content_en: '', privacy_content_ja: '', privacy_content_ko: '', privacy_content_zh: '',
@@ -83,6 +83,25 @@ const AdminDashboard = () => {
     donation_zalopay_name: '', donation_zalopay_phone: '',
     donation_buymeacoffee_url: '',
     donation_kofi_url: ''
+  });
+
+  // Dynamic custom pages state
+  const [customPagesList, setCustomPagesList] = useState([]);
+  const [customPageForm, setCustomPageForm] = useState({
+    key: '',
+    title_vi: '', title_en: '', title_ja: '', title_ko: '', title_zh: '',
+    navTitle_vi: '', navTitle_en: '', navTitle_ja: '', navTitle_ko: '', navTitle_zh: '',
+    content_vi: '', content_en: '', content_ja: '', content_ko: '', content_zh: '',
+    showInHeader: false,
+    showInFooter: false,
+    isPublished: true,
+    coverImage: '',
+    template: 'default',
+    graduationDate: '',
+    familyThanks_vi: '', familyThanks_en: '', familyThanks_ja: '', familyThanks_ko: '', familyThanks_zh: '',
+    teacherThanks_vi: '', teacherThanks_en: '', teacherThanks_ja: '', teacherThanks_ko: '', teacherThanks_zh: '',
+    friendThanks_vi: '', friendThanks_en: '', friendThanks_ja: '', friendThanks_ko: '', friendThanks_zh: '',
+    gallery: []
   });
 
   const [accountForm, setAccountForm] = useState({ currentPassword: '', newPassword: '' });
@@ -153,6 +172,13 @@ const AdminDashboard = () => {
         const res = await api.get('/dictionary');
         const items = Array.isArray(res.data) ? res.data : [];
         setDictEntries(items);
+
+        try {
+          const customPagesRes = await api.get('/pages');
+          setCustomPagesList(Array.isArray(customPagesRes.data) ? customPagesRes.data : []);
+        } catch (err) {
+          console.error("Failed to load custom pages list", err);
+        }
 
         const newForm = {
           privacy_title_vi: '', privacy_title_en: '', privacy_title_ja: '', privacy_title_ko: '', privacy_title_zh: '',
@@ -240,17 +266,184 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleCustomPageSubmit = async (e) => {
+    e.preventDefault();
+    if (!customPageForm.key || !customPageForm.key.trim()) {
+      alert("Page Key/Slug is required.");
+      return;
+    }
+    const pageKey = customPageForm.key.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
+    
+    const body = {
+      title: {
+        vi: customPageForm.title_vi,
+        en: customPageForm.title_en,
+        ja: customPageForm.title_ja,
+        ko: customPageForm.title_ko,
+        zh: customPageForm.title_zh
+      },
+      navTitle: {
+        vi: customPageForm.navTitle_vi,
+        en: customPageForm.navTitle_en,
+        ja: customPageForm.navTitle_ja,
+        ko: customPageForm.navTitle_ko,
+        zh: customPageForm.navTitle_zh
+      },
+      content: {
+        vi: customPageForm.content_vi,
+        en: customPageForm.content_en,
+        ja: customPageForm.content_ja,
+        ko: customPageForm.content_ko,
+        zh: customPageForm.content_zh
+      },
+      metadata: {
+        isCustom: true,
+        showInHeader: customPageForm.showInHeader,
+        showInFooter: customPageForm.showInFooter,
+        isPublished: customPageForm.isPublished,
+        coverImage: customPageForm.coverImage,
+        template: customPageForm.template || 'default',
+        graduationDate: customPageForm.graduationDate || '',
+        familyThanks_vi: customPageForm.familyThanks_vi || '',
+        familyThanks_en: customPageForm.familyThanks_en || '',
+        familyThanks_ja: customPageForm.familyThanks_ja || '',
+        familyThanks_ko: customPageForm.familyThanks_ko || '',
+        familyThanks_zh: customPageForm.familyThanks_zh || '',
+        teacherThanks_vi: customPageForm.teacherThanks_vi || '',
+        teacherThanks_en: customPageForm.teacherThanks_en || '',
+        teacherThanks_ja: customPageForm.teacherThanks_ja || '',
+        teacherThanks_ko: customPageForm.teacherThanks_ko || '',
+        teacherThanks_zh: customPageForm.teacherThanks_zh || '',
+        friendThanks_vi: customPageForm.friendThanks_vi || '',
+        friendThanks_en: customPageForm.friendThanks_en || '',
+        friendThanks_ja: customPageForm.friendThanks_ja || '',
+        friendThanks_ko: customPageForm.friendThanks_ko || '',
+        friendThanks_zh: customPageForm.friendThanks_zh || '',
+        gallery: customPageForm.gallery || []
+      }
+    };
+
+    try {
+      await api.put(`/pages/${pageKey}`, body);
+      alert('Custom page saved successfully!');
+      setSelectedStaticPage('list');
+      setCustomPageForm({
+        key: '',
+        title_vi: '', title_en: '', title_ja: '', title_ko: '', title_zh: '',
+        navTitle_vi: '', navTitle_en: '', navTitle_ja: '', navTitle_ko: '', navTitle_zh: '',
+        content_vi: '', content_en: '', content_ja: '', content_ko: '', content_zh: '',
+        showInHeader: false,
+        showInFooter: false,
+        isPublished: true,
+        coverImage: '',
+        template: 'default',
+        graduationDate: '',
+        familyThanks_vi: '', familyThanks_en: '', familyThanks_ja: '', familyThanks_ko: '', familyThanks_zh: '',
+        teacherThanks_vi: '', teacherThanks_en: '', teacherThanks_ja: '', teacherThanks_ko: '', teacherThanks_zh: '',
+        friendThanks_vi: '', friendThanks_en: '', friendThanks_ja: '', friendThanks_ko: '', friendThanks_zh: '',
+        gallery: []
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save custom page: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleCustomPageDelete = async (pageKey) => {
+    if (!window.confirm(`Are you sure you want to delete the custom page "${pageKey}"?`)) return;
+    try {
+      await api.delete(`/pages/${pageKey}`);
+      alert('Custom page deleted successfully!');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete page: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleEditCustomPageClick = (page) => {
+    setCustomPageForm({
+      key: page.key,
+      title_vi: page.title?.vi || '',
+      title_en: page.title?.en || '',
+      title_ja: page.title?.ja || '',
+      title_ko: page.title?.ko || '',
+      title_zh: page.title?.zh || '',
+      navTitle_vi: page.navTitle?.vi || '',
+      navTitle_en: page.navTitle?.en || '',
+      navTitle_ja: page.navTitle?.ja || '',
+      navTitle_ko: page.navTitle?.ko || '',
+      navTitle_zh: page.navTitle?.zh || '',
+      content_vi: page.content?.vi || '',
+      content_en: page.content?.en || '',
+      content_ja: page.content?.ja || '',
+      content_ko: page.content?.ko || '',
+      content_zh: page.content?.zh || '',
+      showInHeader: page.metadata?.showInHeader || false,
+      showInFooter: page.metadata?.showInFooter || false,
+      isPublished: page.metadata?.isPublished !== false,
+      coverImage: page.metadata?.coverImage || '',
+      template: page.metadata?.template || 'default',
+      graduationDate: page.metadata?.graduationDate || '',
+      familyThanks_vi: page.metadata?.familyThanks_vi || '',
+      familyThanks_en: page.metadata?.familyThanks_en || '',
+      familyThanks_ja: page.metadata?.familyThanks_ja || '',
+      familyThanks_ko: page.metadata?.familyThanks_ko || '',
+      familyThanks_zh: page.metadata?.familyThanks_zh || '',
+      teacherThanks_vi: page.metadata?.teacherThanks_vi || '',
+      teacherThanks_en: page.metadata?.teacherThanks_en || '',
+      teacherThanks_ja: page.metadata?.teacherThanks_ja || '',
+      teacherThanks_ko: page.metadata?.teacherThanks_ko || '',
+      teacherThanks_zh: page.metadata?.teacherThanks_zh || '',
+      friendThanks_vi: page.metadata?.friendThanks_vi || '',
+      friendThanks_en: page.metadata?.friendThanks_en || '',
+      friendThanks_ja: page.metadata?.friendThanks_ja || '',
+      friendThanks_ko: page.metadata?.friendThanks_ko || '',
+      friendThanks_zh: page.metadata?.friendThanks_zh || '',
+      gallery: page.metadata?.gallery || []
+    });
+    setSelectedStaticPage(page.key);
+  };
+
   const handleImageUpload = async (e, formType) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('image', file);
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
     setUploadingImage(true);
     try {
-      const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      if (formType === 'project') setProjectForm(prev => ({ ...prev, imageUrl: res.data.imageUrl }));
-      else if (formType === 'post') setPostForm(prev => ({ ...prev, coverImage: res.data.imageUrl }));
-      else if (formType === 'profile') setProfileForm(prev => ({ ...prev, avatarUrl: res.data.imageUrl }));
+      if (formType === 'customPageGallery') {
+        const urls = [];
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('image', file);
+          const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+          urls.push(res.data.imageUrl);
+        }
+        setCustomPageForm(prev => ({
+          ...prev,
+          gallery: [...(prev.gallery || []), ...urls]
+        }));
+      } else {
+        const file = files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        const imageUrl = res.data.imageUrl;
+        if (formType === 'project') setProjectForm(prev => ({ ...prev, imageUrl }));
+        else if (formType === 'post') setPostForm(prev => ({ ...prev, coverImage: imageUrl }));
+        else if (formType === 'profile') setProfileForm(prev => ({ ...prev, avatarUrl: imageUrl }));
+        else if (formType === 'customPageCover') setCustomPageForm(prev => ({ ...prev, coverImage: imageUrl }));
+        else if (formType === 'customPageContent') {
+          const currentContentKey = `content_${formLang}`;
+          const currentContent = customPageForm[currentContentKey] || '';
+          const imgHtml = `<p><img src="${imageUrl}" alt="Image" style="max-width:100%; border-radius:12px; margin: 16px 0;" /></p>`;
+          setCustomPageForm(prev => ({
+            ...prev,
+            [currentContentKey]: currentContent + imgHtml
+          }));
+        }
+      }
+      alert('Upload completed successfully!');
     } catch (err) {
       console.error(err);
       alert('Upload failed.');
@@ -836,155 +1029,535 @@ const AdminDashboard = () => {
 
           {/* ═══════ PAGES TAB ═══════ */}
           {activeTab === 'pages' && (
-            <div className="space-y-8">
+            <div className="space-y-8 animate-fade-in">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-apple-grayBorderSoft dark:border-apple-graphiteB pb-4 gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold font-display">Edit Static Pages</h2>
-                <div className="flex gap-2">
-                  {['privacy', 'terms', 'donation'].map(p => (
-                    <button key={p} type="button" onClick={() => setSelectedStaticPage(p)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedStaticPage === p ? 'bg-purple-600 text-white shadow-md' : 'bg-white/60 dark:bg-white/[0.03] border border-apple-grayBorderSoft dark:border-white/5 text-apple-grayNeutral'}`}
-                    >
-                      {p === 'privacy' && '🔒 Privacy Policy'}
-                      {p === 'terms' && '📝 Terms of Service'}
-                      {p === 'donation' && '💝 Donation & Support'}
-                    </button>
-                  ))}
-                </div>
+                <h2 className="text-xl sm:text-2xl font-semibold font-display">Manage Pages</h2>
+                {selectedStaticPage !== 'list' && (
+                  <button
+                    onClick={() => setSelectedStaticPage('list')}
+                    className="self-start px-4 py-2 text-xs font-semibold rounded-xl border border-apple-grayBorderMid hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                  >
+                    ← Back to List
+                  </button>
+                )}
               </div>
 
-              <form onSubmit={handlePagesSubmit} className="space-y-6">
-                {(selectedStaticPage === 'privacy' || selectedStaticPage === 'terms') && (
-                  <div className="space-y-4">
-                    <LangTabs />
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-apple-grayNeutral">Page Title ({formLang.toUpperCase()})</label>
-                      <input type="text" required className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent"
-                        value={pagesForm[`${selectedStaticPage}_title_${formLang}`] || ''}
-                        onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_title_${formLang}`]: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-apple-grayNeutral">Page Content (Markdown) ({formLang.toUpperCase()})</label>
-                      <textarea required className="w-full px-4 py-3 border border-apple-grayBorderMid rounded-2xl bg-transparent font-mono text-sm" rows={12}
-                        value={pagesForm[`${selectedStaticPage}_content_${formLang}`] || ''}
-                        onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_content_${formLang}`]: e.target.value })} />
-                    </div>
+              {/* 1. LIST VIEW */}
+              {selectedStaticPage === 'list' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-apple-grayNeutral">Edit system pages or create dynamic custom landing pages (e.g. graduation ceremony page).</p>
+                    <button
+                      onClick={() => {
+                        setCustomPageForm({
+                          key: '',
+                          title_vi: '', title_en: '', title_ja: '', title_ko: '', title_zh: '',
+                          content_vi: '', content_en: '', content_ja: '', content_ko: '', content_zh: '',
+                          showInHeader: false,
+                          showInFooter: false,
+                          isPublished: true
+                        });
+                        setSelectedStaticPage('new_page');
+                      }}
+                      className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold transition-all shadow-sm"
+                    >
+                      + Create Custom Page
+                    </button>
                   </div>
-                )}
 
-                {selectedStaticPage === 'donation' && (
-                  <div className="space-y-6">
-                    <div className="border border-purple-500/20 rounded-2xl p-5 bg-purple-500/5 space-y-4">
-                      <h3 className="text-sm font-bold text-purple-600 dark:text-purple-400">💝 Donation Title & Message</h3>
-                      <LangTabs />
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-apple-grayNeutral">Section Title ({formLang.toUpperCase()})</label>
-                        <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                          value={pagesForm[`donation_title_${formLang}`] || ''}
-                          onChange={e => setPagesForm({ ...pagesForm, [`donation_title_${formLang}`]: e.target.value })} />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-apple-grayNeutral">Support Paragraph (Markdown) ({formLang.toUpperCase()})</label>
-                        <textarea required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm" rows={4}
-                          value={pagesForm[`donation_content_${formLang}`] || ''}
-                          onChange={e => setPagesForm({ ...pagesForm, [`donation_content_${formLang}`]: e.target.value })} />
-                      </div>
-                    </div>
+                  <div className="overflow-x-auto rounded-2xl border border-apple-grayBorderSoft dark:border-apple-graphiteB bg-white/40 dark:bg-black/10">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-apple-grayBorderSoft dark:border-apple-graphiteB bg-black/5 dark:bg-white/[0.02] text-xs font-bold uppercase tracking-wider text-apple-grayNeutral">
+                          <th className="px-6 py-4">Page Title / URL Slug</th>
+                          <th className="px-6 py-4">Type</th>
+                          <th className="px-6 py-4 text-center">Navbar</th>
+                          <th className="px-6 py-4 text-center">Footer</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-apple-grayBorderSoft/50 dark:divide-apple-graphiteB/50">
+                        {/* System Page: Privacy */}
+                        <tr>
+                          <td className="px-6 py-4 font-medium text-apple-ink dark:text-apple-white">🔒 Privacy Policy <span className="block text-xs text-apple-grayNeutral font-normal mt-0.5">/privacy</span></td>
+                          <td className="px-6 py-4 text-xs font-semibold text-blue-600 dark:text-blue-400">System</td>
+                          <td className="px-6 py-4 text-center text-xs text-apple-grayNeutral">-</td>
+                          <td className="px-6 py-4 text-center text-green-500 font-bold">✓</td>
+                          <td className="px-6 py-4"><span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-500">Published</span></td>
+                          <td className="px-6 py-4 text-right">
+                            <button onClick={() => setSelectedStaticPage('privacy')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-600 hover:bg-purple-500/25 transition-all">Edit</button>
+                          </td>
+                        </tr>
+                        {/* System Page: Terms */}
+                        <tr>
+                          <td className="px-6 py-4 font-medium text-apple-ink dark:text-apple-white">📝 Terms of Service <span className="block text-xs text-apple-grayNeutral font-normal mt-0.5">/terms</span></td>
+                          <td className="px-6 py-4 text-xs font-semibold text-blue-600 dark:text-blue-400">System</td>
+                          <td className="px-6 py-4 text-center text-xs text-apple-grayNeutral">-</td>
+                          <td className="px-6 py-4 text-center text-green-500 font-bold">✓</td>
+                          <td className="px-6 py-4"><span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-500">Published</span></td>
+                          <td className="px-6 py-4 text-right">
+                            <button onClick={() => setSelectedStaticPage('terms')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-600 hover:bg-purple-500/25 transition-all">Edit</button>
+                          </td>
+                        </tr>
+                        {/* System Page: Donation */}
+                        <tr>
+                          <td className="px-6 py-4 font-medium text-apple-ink dark:text-apple-white">💝 Donation & Support <span className="block text-xs text-apple-grayNeutral font-normal mt-0.5">/donation</span></td>
+                          <td className="px-6 py-4 text-xs font-semibold text-blue-600 dark:text-blue-400">System</td>
+                          <td className="px-6 py-4 text-center text-xs text-apple-grayNeutral">-</td>
+                          <td className="px-6 py-4 text-center text-green-500 font-bold">✓</td>
+                          <td className="px-6 py-4"><span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-500">Published</span></td>
+                          <td className="px-6 py-4 text-right">
+                            <button onClick={() => setSelectedStaticPage('donation')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-600 hover:bg-purple-500/25 transition-all">Edit</button>
+                          </td>
+                        </tr>
+                        {/* Custom Dynamic Pages */}
+                        {customPagesList.map(page => (
+                          <tr key={page.key}>
+                            <td className="px-6 py-4 font-medium text-apple-ink dark:text-apple-white">
+                              🌐 {page.title?.vi || page.title?.en || page.key}
+                              <span className="block text-xs text-apple-grayNeutral font-normal mt-0.5">/page/{page.key}</span>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-semibold text-purple-600 dark:text-purple-400">Custom</td>
+                            <td className="px-6 py-4 text-center font-bold text-xs">{page.metadata?.showInHeader ? <span className="text-green-500">✓</span> : <span className="text-apple-grayNeutral opacity-30">✗</span>}</td>
+                            <td className="px-6 py-4 text-center font-bold text-xs">{page.metadata?.showInFooter ? <span className="text-green-500">✓</span> : <span className="text-apple-grayNeutral opacity-30">✗</span>}</td>
+                            <td className="px-6 py-4">
+                              {page.metadata?.isPublished !== false ? (
+                                <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-green-500/10 text-green-500">Published</span>
+                              ) : (
+                                <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-apple-grayNeutral/10 text-apple-grayNeutral">Draft</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <button onClick={() => handleEditCustomPageClick(page)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-600 hover:bg-purple-500/25 transition-all">Edit</button>
+                                <button onClick={() => handleCustomPageDelete(page.key)} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/10 text-red-500 hover:bg-red-500/25 transition-all">Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {customPagesList.length === 0 && (
+                          <tr>
+                            <td colSpan="6" className="px-6 py-8 text-center text-apple-grayNeutral text-xs">No custom pages created yet. Click "+ Create Custom Page" to start.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Bank Details */}
-                      <div className="border border-indigo-500/20 rounded-2xl p-5 bg-indigo-500/5 space-y-4">
-                        <h3 className="text-sm font-bold text-indigo-600 dark:text-indigo-400">🏦 Bank Transfer Details</h3>
+              {/* 2. SYSTEM PAGES FORM */}
+              {['privacy', 'terms', 'donation'].includes(selectedStaticPage) && (
+                <form onSubmit={handlePagesSubmit} className="space-y-6 animate-fade-in">
+                  {(selectedStaticPage === 'privacy' || selectedStaticPage === 'terms') && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 capitalize">✏️ Editing System Page: {selectedStaticPage}</span>
                         <LangTabs />
-                        <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-apple-grayNeutral">Bank Name ({formLang.toUpperCase()})</label>
-                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                            value={pagesForm[`donation_bank_name_${formLang}`] || ''}
-                            onChange={e => setPagesForm({ ...pagesForm, [`donation_bank_name_${formLang}`]: e.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-apple-grayNeutral">Page Title ({formLang.toUpperCase()})</label>
+                        <input type="text" required className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent"
+                          value={pagesForm[`${selectedStaticPage}_title_${formLang}`] || ''}
+                          onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_title_${formLang}`]: e.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-apple-grayNeutral">Page Content (Markdown) ({formLang.toUpperCase()})</label>
+                        <textarea required className="w-full px-4 py-3 border border-apple-grayBorderMid rounded-2xl bg-transparent font-mono text-sm" rows={12}
+                          value={pagesForm[`${selectedStaticPage}_content_${formLang}`] || ''}
+                          onChange={e => setPagesForm({ ...pagesForm, [`${selectedStaticPage}_content_${formLang}`]: e.target.value })} />
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedStaticPage === 'donation' && (
+                    <div className="space-y-6">
+                      <div className="border border-purple-500/20 rounded-2xl p-5 bg-purple-500/5 space-y-4">
+                        <h3 className="text-sm font-bold text-purple-600 dark:text-purple-400">💝 Donation Title & Message</h3>
+                        <div className="flex justify-between items-center">
+                          <span></span>
+                          <LangTabs />
                         </div>
                         <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-apple-grayNeutral">Account Number (Same for all languages)</label>
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Section Title ({formLang.toUpperCase()})</label>
                           <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                            value={pagesForm.donation_account_number || ''}
-                            onChange={e => setPagesForm({ ...pagesForm, donation_account_number: e.target.value })} />
+                            value={pagesForm[`donation_title_${formLang}`] || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, [`donation_title_${formLang}`]: e.target.value })} />
                         </div>
                         <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-apple-grayNeutral">Account Holder Name (Same for all languages)</label>
-                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                            value={pagesForm.donation_account_name || ''}
-                            onChange={e => setPagesForm({ ...pagesForm, donation_account_name: e.target.value })} />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-apple-grayNeutral">Branch Location ({formLang.toUpperCase()})</label>
-                          <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                            value={pagesForm[`donation_branch_${formLang}`] || ''}
-                            onChange={e => setPagesForm({ ...pagesForm, [`donation_branch_${formLang}`]: e.target.value })} />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-xs font-semibold text-apple-grayNeutral">QR Code Image URL (Same for all languages)</label>
-                          <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                            value={pagesForm.donation_qr_code_url || ''}
-                            onChange={e => setPagesForm({ ...pagesForm, donation_qr_code_url: e.target.value })} />
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Support Paragraph (Markdown) ({formLang.toUpperCase()})</label>
+                          <textarea required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm" rows={4}
+                            value={pagesForm[`donation_content_${formLang}`] || ''}
+                            onChange={e => setPagesForm({ ...pagesForm, [`donation_content_${formLang}`]: e.target.value })} />
                         </div>
                       </div>
 
-                      {/* E-Wallets & Platforms */}
-                      <div className="space-y-6">
-                        <div className="border border-pink-500/20 rounded-2xl p-5 bg-pink-500/5 space-y-4">
-                          <h3 className="text-sm font-bold text-pink-600 dark:text-pink-400">📱 Mobile E-Wallets</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="block text-xs text-apple-grayNeutral">MoMo Name</label>
-                              <input type="text" placeholder="Ví MoMo" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
-                                value={pagesForm.donation_momo_name || ''}
-                                onChange={e => setPagesForm({ ...pagesForm, donation_momo_name: e.target.value })} />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="block text-xs text-apple-grayNeutral">MoMo Phone</label>
-                              <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
-                                value={pagesForm.donation_momo_phone || ''}
-                                onChange={e => setPagesForm({ ...pagesForm, donation_momo_phone: e.target.value })} />
-                            </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Bank Details */}
+                        <div className="border border-indigo-500/20 rounded-2xl p-5 bg-indigo-500/5 space-y-4">
+                          <h3 className="text-sm font-bold text-indigo-600 dark:text-indigo-400">🏦 Bank Transfer Details</h3>
+                          <div className="flex justify-between items-center">
+                            <span></span>
+                            <LangTabs />
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <label className="block text-xs text-apple-grayNeutral">ZaloPay Name</label>
-                              <input type="text" placeholder="Ví ZaloPay" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
-                                value={pagesForm.donation_zalopay_name || ''}
-                                onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_name: e.target.value })} />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="block text-xs text-apple-grayNeutral">ZaloPay Phone</label>
-                              <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
-                                value={pagesForm.donation_zalopay_phone || ''}
-                                onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_phone: e.target.value })} />
-                            </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Bank Name ({formLang.toUpperCase()})</label>
+                            <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm[`donation_bank_name_${formLang}`] || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, [`donation_bank_name_${formLang}`]: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Account Number (Same for all languages)</label>
+                            <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm.donation_account_number || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, donation_account_number: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Account Holder Name (Same for all languages)</label>
+                            <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm.donation_account_name || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, donation_account_name: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">Branch Location ({formLang.toUpperCase()})</label>
+                            <input type="text" required className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm[`donation_branch_${formLang}`] || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, [`donation_branch_${formLang}`]: e.target.value })} />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold text-apple-grayNeutral">QR Code Image URL (Same for all languages)</label>
+                            <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                              value={pagesForm.donation_qr_code_url || ''}
+                              onChange={e => setPagesForm({ ...pagesForm, donation_qr_code_url: e.target.value })} />
                           </div>
                         </div>
 
-                        <div className="border border-amber-500/20 rounded-2xl p-5 bg-amber-500/5 space-y-4">
-                          <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400">☕ External Platforms</h3>
-                          <div className="space-y-2">
-                            <label className="block text-xs font-semibold text-apple-grayNeutral">Buy Me A Coffee Link</label>
-                            <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                              value={pagesForm.donation_buymeacoffee_url || ''}
-                              onChange={e => setPagesForm({ ...pagesForm, donation_buymeacoffee_url: e.target.value })} />
+                        {/* E-Wallets & Platforms */}
+                        <div className="space-y-6">
+                          <div className="border border-pink-500/20 rounded-2xl p-5 bg-pink-500/5 space-y-4">
+                            <h3 className="text-sm font-bold text-pink-600 dark:text-pink-400">📱 Mobile E-Wallets</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="block text-xs text-apple-grayNeutral">MoMo Name</label>
+                                <input type="text" placeholder="Ví MoMo" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                  value={pagesForm.donation_momo_name || ''}
+                                  onChange={e => setPagesForm({ ...pagesForm, donation_momo_name: e.target.value })} />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="block text-xs text-apple-grayNeutral">MoMo Phone</label>
+                                <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                  value={pagesForm.donation_momo_phone || ''}
+                                  onChange={e => setPagesForm({ ...pagesForm, donation_momo_phone: e.target.value })} />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1">
+                                <label className="block text-xs text-apple-grayNeutral">ZaloPay Name</label>
+                                <input type="text" placeholder="Ví ZaloPay" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                  value={pagesForm.donation_zalopay_name || ''}
+                                  onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_name: e.target.value })} />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="block text-xs text-apple-grayNeutral">ZaloPay Phone</label>
+                                <input type="text" className="w-full px-3 py-1.5 border border-apple-grayBorderMid rounded-lg bg-transparent text-xs"
+                                  value={pagesForm.donation_zalopay_phone || ''}
+                                  onChange={e => setPagesForm({ ...pagesForm, donation_zalopay_phone: e.target.value })} />
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <label className="block text-xs font-semibold text-apple-grayNeutral">Ko-fi Link</label>
-                            <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
-                              value={pagesForm.donation_kofi_url || ''}
-                              onChange={e => setPagesForm({ ...pagesForm, donation_kofi_url: e.target.value })} />
+
+                          <div className="border border-amber-500/20 rounded-2xl p-5 bg-amber-500/5 space-y-4">
+                            <h3 className="text-sm font-bold text-amber-600 dark:text-amber-400">☕ External Platforms</h3>
+                            <div className="space-y-2">
+                              <label className="block text-xs font-semibold text-apple-grayNeutral">Buy Me A Coffee Link</label>
+                              <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                                value={pagesForm.donation_buymeacoffee_url || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_buymeacoffee_url: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="block text-xs font-semibold text-apple-grayNeutral">Ko-fi Link</label>
+                              <input type="url" className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                                value={pagesForm.donation_kofi_url || ''}
+                                onChange={e => setPagesForm({ ...pagesForm, donation_kofi_url: e.target.value })} />
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2.5 rounded-xl font-medium mt-4 hover:scale-[1.01] transition-transform">
-                  Save Page Settings
-                </button>
-              </form>
+                  <button type="submit" className="bg-apple-ink dark:bg-white text-white dark:text-apple-ink px-6 py-2.5 rounded-xl font-medium mt-4 hover:scale-[1.01] transition-transform">
+                    Save Page Settings
+                  </button>
+                </form>
+              )}
+
+              {/* 3. CUSTOM DYNAMIC PAGE FORM (CREATE / EDIT) */}
+              {(selectedStaticPage === 'new_page' || (!['list', 'privacy', 'terms', 'donation'].includes(selectedStaticPage))) && (
+                <form onSubmit={handleCustomPageSubmit} className="space-y-6 animate-fade-in">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <span className="text-sm font-semibold text-purple-600 dark:text-purple-400 font-display">
+                      {selectedStaticPage === 'new_page' ? '✨ Creating New Custom Page' : `✏️ Editing Custom Page: ${selectedStaticPage}`}
+                    </span>
+                    <LangTabs />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/40 dark:bg-white/[0.02] p-5 rounded-2xl border border-apple-grayBorderSoft dark:border-white/5">
+                    <div className="space-y-4">
+                      {/* Slug key */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Page URL Slug / Key *</label>
+                        <input
+                          type="text"
+                          required
+                          disabled={selectedStaticPage !== 'new_page'}
+                          placeholder="e.g. graduation-day"
+                          value={customPageForm.key}
+                          onChange={e => setCustomPageForm(prev => ({ ...prev, key: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '-') }))}
+                          className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm disabled:opacity-50"
+                        />
+                        <p className="text-[10px] text-apple-grayNeutral">Use only lowercase letters, numbers, and dashes. This is the URL: e.g. /page/{customPageForm.key || 'your-slug'}</p>
+                      </div>
+
+                      {/* Title */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Page Title ({formLang.toUpperCase()}) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={customPageForm[`title_${formLang}`] || ''}
+                          onChange={e => setCustomPageForm(prev => ({ ...prev, [`title_${formLang}`]: e.target.value }))}
+                          placeholder={`Title in ${formLang === 'vi' ? 'Vietnamese' : 'English'}`}
+                          className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                        />
+                      </div>
+
+                      {/* Short Navigation Title */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Short Menu Title ({formLang.toUpperCase()}) - Optional</label>
+                        <input
+                          type="text"
+                          value={customPageForm[`navTitle_${formLang}`] || ''}
+                          onChange={e => setCustomPageForm(prev => ({ ...prev, [`navTitle_${formLang}`]: e.target.value }))}
+                          placeholder={`Short text for Navbar Menu (e.g. Graduation)`}
+                          className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                        />
+                        <p className="text-[9px] text-apple-grayNeutral">If empty, the full Page Title will be used in the Navigation bar / Footer.</p>
+                      </div>
+
+                      {/* Template Selector */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Giao diện Trang (Page Template)</label>
+                        <select
+                          value={customPageForm.template}
+                          onChange={e => setCustomPageForm(prev => ({ ...prev, template: e.target.value }))}
+                          className="w-full px-4 py-2.5 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-sm"
+                        >
+                          <option value="default">Default (Trang văn bản thông thường)</option>
+                          <option value="graduation">Graduation Ceremony (Lễ tốt nghiệp đặc biệt 🎓)</option>
+                        </select>
+                      </div>
+
+                      {/* Cover Image */}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-apple-grayNeutral">Cover Image / Banner</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleImageUpload(e, 'customPageCover')}
+                          className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-transparent text-sm"
+                        />
+                        {customPageForm.coverImage && (
+                          <div className="mt-2 h-20 w-36 rounded-lg overflow-hidden border border-apple-grayBorderSoft">
+                            <img src={customPageForm.coverImage} alt="Cover Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Checkboxes and settings */}
+                    <div className="space-y-4 flex flex-col justify-between">
+                      <div>
+                        <h4 className="text-xs font-bold text-apple-grayNeutral uppercase tracking-wider mb-2">Attachment & Visibility</h4>
+                        <div className="space-y-3">
+                          <label className="flex items-center gap-3 cursor-pointer text-sm font-medium">
+                            <input
+                              type="checkbox"
+                              checked={customPageForm.showInHeader}
+                              onChange={e => setCustomPageForm(prev => ({ ...prev, showInHeader: e.target.checked }))}
+                              className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                            />
+                            <span>Show in top Navigation Header</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer text-sm font-medium">
+                            <input
+                              type="checkbox"
+                              checked={customPageForm.showInFooter}
+                              onChange={e => setCustomPageForm(prev => ({ ...prev, showInFooter: e.target.checked }))}
+                              className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                            />
+                            <span>Show in Footer Link Section</span>
+                          </label>
+                          <label className="flex items-center gap-3 cursor-pointer text-sm font-medium">
+                            <input
+                              type="checkbox"
+                              checked={customPageForm.isPublished}
+                              onChange={e => setCustomPageForm(prev => ({ ...prev, isPublished: e.target.checked }))}
+                              className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                            />
+                            <span className="flex flex-col">
+                              <span>Publish page</span>
+                              <span className="text-[10px] text-apple-grayNeutral font-normal">If unchecked, it remains as a draft and is private</span>
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Content Image Uploader Helper */}
+                      <div className="space-y-1 pt-4 border-t border-apple-grayBorderSoft/40">
+                        <label className="block text-xs font-semibold text-purple-600 dark:text-purple-400">🖼️ Insert Image into Content</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleImageUpload(e, 'customPageContent')}
+                          className="w-full px-4 py-2 border border-purple-500/20 rounded-xl bg-purple-500/5 text-xs text-purple-600 cursor-pointer"
+                        />
+                        <p className="text-[9px] text-apple-grayNeutral">Uploading here will automatically insert the image at the end of the editor for the active language ({formLang.toUpperCase()}).</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GRADUATION TEMPLATE SPECIFIC OPTIONS */}
+                  {customPageForm.template === 'graduation' && (
+                    <div className="space-y-6 bg-gradient-to-br from-purple-500/10 to-blue-500/5 dark:from-purple-500/[0.05] dark:to-blue-500/[0.02] p-6 rounded-3xl border border-purple-500/20 dark:border-purple-500/10 animate-fade-in">
+                      <h3 className="text-sm font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <span>🎓</span> Graduation Template Settings (Thiết lập trang tốt nghiệp)
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Date & Time */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Graduation Date & Time (Ngày giờ làm lễ tốt nghiệp)</label>
+                          <input
+                            type="datetime-local"
+                            value={customPageForm.graduationDate}
+                            onChange={e => setCustomPageForm(prev => ({ ...prev, graduationDate: e.target.value }))}
+                            className="w-full px-4 py-2 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-sm"
+                          />
+                          <p className="text-[10px] text-apple-grayNeutral">Used to display countdown timers or graduation status.</p>
+                        </div>
+
+                        {/* Gallery Uploader */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-apple-grayNeutral">Memory Gallery (Album ảnh kỷ niệm)</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={e => handleImageUpload(e, 'customPageGallery')}
+                            className="w-full px-4 py-1.5 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-xs"
+                          />
+                          <p className="text-[10px] text-apple-grayNeutral">Upload multiple pictures for a beautiful gallery display.</p>
+
+                          {/* Gallery Thumbnail Preview */}
+                          {customPageForm.gallery && customPageForm.gallery.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2 max-h-24 overflow-y-auto p-1.5 border border-apple-grayBorderSoft rounded-xl">
+                              {customPageForm.gallery.map((img, idx) => (
+                                <div key={idx} className="relative h-12 w-12 rounded overflow-hidden border border-apple-grayBorderSoft group">
+                                  <img src={img} alt="Gallery Thumb" className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => setCustomPageForm(prev => ({
+                                      ...prev,
+                                      gallery: prev.gallery.filter((_, i) => i !== idx)
+                                    }))}
+                                    className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Gratitude Cards inputs */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-apple-grayBorderSoft/40">
+                        {/* Family thanks */}
+                        <div className="space-y-2 border border-red-500/10 rounded-2xl p-4 bg-red-500/[0.02]">
+                          <label className="block text-xs font-bold text-red-500/80">👨‍👩‍👧‍👦 Tri ân Gia Đình ({formLang.toUpperCase()})</label>
+                          <textarea
+                            rows={3}
+                            placeholder="Lời cảm ơn bố mẹ, người thân..."
+                            value={customPageForm[`familyThanks_${formLang}`] || ''}
+                            onChange={e => setCustomPageForm(prev => ({ ...prev, [`familyThanks_${formLang}`]: e.target.value }))}
+                            className="w-full px-3 py-2 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-xs"
+                          />
+                        </div>
+
+                        {/* Teacher thanks */}
+                        <div className="space-y-2 border border-blue-500/10 rounded-2xl p-4 bg-blue-500/[0.02]">
+                          <label className="block text-xs font-bold text-blue-500/80">👨‍🏫 Tri ân Thầy Cô ({formLang.toUpperCase()})</label>
+                          <textarea
+                            rows={3}
+                            placeholder="Lời cảm ơn thầy cô, nhà trường..."
+                            value={customPageForm[`teacherThanks_${formLang}`] || ''}
+                            onChange={e => setCustomPageForm(prev => ({ ...prev, [`teacherThanks_${formLang}`]: e.target.value }))}
+                            className="w-full px-3 py-2 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-xs"
+                          />
+                        </div>
+
+                        {/* Friend thanks */}
+                        <div className="space-y-2 border border-emerald-500/10 rounded-2xl p-4 bg-emerald-500/[0.02]">
+                          <label className="block text-xs font-bold text-emerald-500/80">🤝 Tri ân Bạn Bè ({formLang.toUpperCase()})</label>
+                          <textarea
+                            rows={3}
+                            placeholder="Lời cảm ơn bạn bè, chiến hữu..."
+                            value={customPageForm[`friendThanks_${formLang}`] || ''}
+                            onChange={e => setCustomPageForm(prev => ({ ...prev, [`friendThanks_${formLang}`]: e.target.value }))}
+                            className="w-full px-3 py-2 border border-apple-grayBorderMid rounded-xl bg-white dark:bg-apple-graphiteA text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Rich Text Editor */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-apple-grayNeutral">Page Content ({formLang.toUpperCase()})</label>
+                    <div className="bg-white dark:bg-apple-graphiteA text-black h-96 mb-12 rounded-xl overflow-hidden border border-apple-grayBorderMid">
+                      <ReactQuill
+                        theme="snow"
+                        value={customPageForm[`content_${formLang}`] || ''}
+                        onChange={(content) => setCustomPageForm(prev => ({ ...prev, [`content_${formLang}`]: content }))}
+                        className="h-full pb-12"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      disabled={uploadingImage}
+                      className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {uploadingImage && (
+                        <div className="w-3.5 h-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+                      )}
+                      {uploadingImage ? 'Uploading...' : (selectedStaticPage === 'new_page' ? 'Create Page' : 'Update Page')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStaticPage('list')}
+                      className="px-6 py-2.5 border border-apple-grayBorderMid rounded-xl text-sm font-semibold hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
